@@ -13,6 +13,11 @@ import traceback
 import sys
 from pathlib import Path
 
+# Fix SSL certificate issues on macOS
+import certifi
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+
 # Add the src directory to the Python path for imports
 src_path = Path(__file__).parent / "src"
 sys.path.insert(0, str(src_path))

@@ -9,6 +9,11 @@ import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+# Fix SSL certificate issues on macOS
+import certifi
+os.environ.setdefault('SSL_CERT_FILE', certifi.where())
+os.environ.setdefault('REQUESTS_CA_BUNDLE', certifi.where())
+
 from dotenv import load_dotenv
 from mcp.server.auth.provider import AccessTokenT
 from mcp.server.fastmcp import FastMCP
@@ -329,112 +334,116 @@ def get_account_holdings(account_id: str) -> str:
         return f"Error getting account holdings: {str(e)}"
 
 
-@mcp.tool()
-def create_transaction(
-    account_id: str,
-    amount: float,
-    description: str,
-    date: str,
-    category_id: Optional[str] = None,
-    merchant_name: Optional[str] = None,
-) -> str:
-    """
-    Create a new transaction in Monarch Money.
-
-    Args:
-        account_id: The account ID to add the transaction to
-        amount: Transaction amount (positive for income, negative for expenses)
-        description: Transaction description
-        date: Transaction date in YYYY-MM-DD format
-        category_id: Optional category ID
-        merchant_name: Optional merchant name
-    """
-    try:
-
-        async def _create_transaction():
-            client = await get_monarch_client()
-
-            transaction_data = {
-                "account_id": account_id,
-                "amount": amount,
-                "description": description,
-                "date": date,
-            }
-
-            if category_id:
-                transaction_data["category_id"] = category_id
-            if merchant_name:
-                transaction_data["merchant_name"] = merchant_name
-
-            return await client.create_transaction(**transaction_data)
-
-        result = run_async(_create_transaction())
-
-        return json.dumps(result, indent=2, default=str)
-    except Exception as e:
-        logger.error(f"Failed to create transaction: {e}")
-        return f"Error creating transaction: {str(e)}"
-
-
-@mcp.tool()
-def update_transaction(
-    transaction_id: str,
-    amount: Optional[float] = None,
-    description: Optional[str] = None,
-    category_id: Optional[str] = None,
-    date: Optional[str] = None,
-) -> str:
-    """
-    Update an existing transaction in Monarch Money.
-
-    Args:
-        transaction_id: The ID of the transaction to update
-        amount: New transaction amount
-        description: New transaction description
-        category_id: New category ID
-        date: New transaction date in YYYY-MM-DD format
-    """
-    try:
-
-        async def _update_transaction():
-            client = await get_monarch_client()
-
-            update_data = {"transaction_id": transaction_id}
-
-            if amount is not None:
-                update_data["amount"] = amount
-            if description is not None:
-                update_data["description"] = description
-            if category_id is not None:
-                update_data["category_id"] = category_id
-            if date is not None:
-                update_data["date"] = date
-
-            return await client.update_transaction(**update_data)
-
-        result = run_async(_update_transaction())
-
-        return json.dumps(result, indent=2, default=str)
-    except Exception as e:
-        logger.error(f"Failed to update transaction: {e}")
-        return f"Error updating transaction: {str(e)}"
+# SECURITY: Write access disabled - read-only mode
+# @mcp.tool()
+# def create_transaction(
+#     account_id: str,
+#     amount: float,
+#     description: str,
+#     date: str,
+#     category_id: Optional[str] = None,
+#     merchant_name: Optional[str] = None,
+# ) -> str:
+#     """
+#     Create a new transaction in Monarch Money.
+#
+#     Args:
+#         account_id: The account ID to add the transaction to
+#         amount: Transaction amount (positive for income, negative for expenses)
+#         description: Transaction description
+#         date: Transaction date in YYYY-MM-DD format
+#         category_id: Optional category ID
+#         merchant_name: Optional merchant name
+#     """
+#     try:
+#
+#         async def _create_transaction():
+#             client = await get_monarch_client()
+#
+#             transaction_data = {
+#                 "account_id": account_id,
+#                 "amount": amount,
+#                 "description": description,
+#                 "date": date,
+#             }
+#
+#             if category_id:
+#                 transaction_data["category_id"] = category_id
+#             if merchant_name:
+#                 transaction_data["merchant_name"] = merchant_name
+#
+#             return await client.create_transaction(**transaction_data)
+#
+#         result = run_async(_create_transaction())
+#
+#         return json.dumps(result, indent=2, default=str)
+#     except Exception as e:
+#         logger.error(f"Failed to create transaction: {e}")
+#         return f"Error creating transaction: {str(e)}"
 
 
-@mcp.tool()
-def refresh_accounts() -> str:
-    """Request account data refresh from financial institutions."""
-    try:
+# SECURITY: Write access disabled - read-only mode
+# @mcp.tool()
+# def update_transaction(
+#     transaction_id: str,
+#     amount: Optional[float] = None,
+#     description: Optional[str] = None,
+#     category_id: Optional[str] = None,
+#     date: Optional[str] = None,
+# ) -> str:
+#     """
+#     Update an existing transaction in Monarch Money.
+#
+#     Args:
+#         transaction_id: The ID of the transaction to update
+#         amount: New transaction amount
+#         description: New transaction description
+#         category_id: New category ID
+#         date: New transaction date in YYYY-MM-DD format
+#     """
+#     try:
+#
+#         async def _update_transaction():
+#             client = await get_monarch_client()
+#
+#             update_data = {"transaction_id": transaction_id}
+#
+#             if amount is not None:
+#                 update_data["amount"] = amount
+#             if description is not None:
+#                 update_data["description"] = description
+#             if category_id is not None:
+#                 update_data["category_id"] = category_id
+#             if date is not None:
+#                 update_data["date"] = date
+#
+#             return await client.update_transaction(**update_data)
+#
+#         result = run_async(_update_transaction())
+#
+#         return json.dumps(result, indent=2, default=str)
+#     except Exception as e:
+#         logger.error(f"Failed to update transaction: {e}")
+#         return f"Error updating transaction: {str(e)}"
 
-        async def _refresh_accounts():
-            client = await get_monarch_client()
-            return await client.request_accounts_refresh()
 
-        result = run_async(_refresh_accounts())
-
-        return json.dumps(result, indent=2, default=str)
-    except Exception as e:
-        logger.error(f"Failed to refresh accounts: {e}")
-        return f"Error refreshing accounts: {str(e)}"
+# SECURITY: Write access disabled - read-only mode
+# Note: refresh_accounts() is disabled to prevent triggering external API calls
+# @mcp.tool()
+# def refresh_accounts() -> str:
+#     """Request account data refresh from financial institutions."""
+#     try:
+#
+#         async def _refresh_accounts():
+#             client = await get_monarch_client()
+#             return await client.request_accounts_refresh()
+#
+#         result = run_async(_refresh_accounts())
+#
+#         return json.dumps(result, indent=2, default=str)
+#     except Exception as e:
+#         logger.error(f"Failed to refresh accounts: {e}")
+#         return f"Error refreshing accounts: {str(e)}"
 
 
 def main():
